@@ -14,6 +14,13 @@ type Fixture = {
   awayTeam: Team;
 };
 
+type StandingRow = {
+  rank: number;
+  team: Team;
+  played: number; // G
+  points: number; // P
+};
+
 type HomeApiResponse = {
   fixtures: Fixture[];
   lastResult: {
@@ -21,6 +28,7 @@ type HomeApiResponse = {
     awayTeam: Team;
     score: { home: number; away: number };
   };
+  standings: StandingRow[]; // <-- nieuw
 };
 
 type Countdown = {
@@ -44,6 +52,47 @@ function getCountdown(targetMs: number): Countdown {
   const minutes = totalMinutes % 60;
 
   return { days, hours, minutes, isExpired: false };
+}
+
+// Zorgt dat "mijn team" altijd in het midden staat: 3 boven + mijn team + 3 onder (= 7)
+// Als er te weinig boven/onder is, vult hij aan vanaf de andere kant.
+function buildStandWindow(rows: StandingRow[], myTeamName: string) {
+  if (!rows || rows.length === 0) return [];
+
+  const norm = (s: string) => s.trim().toLowerCase();
+  const myIdx = rows.findIndex((r) => norm(r.team.name) === norm(myTeamName));
+
+  // Fallback: team niet gevonden => toon top 7
+  if (myIdx === -1) return rows.slice(0, 7);
+
+  const needAbove = 3;
+  const needBelow = 3;
+
+  let start = myIdx - needAbove;
+  let end = myIdx + needBelow + 1; // +1 want slice end is exclusive
+
+  // Clamp eerste poging
+  if (start < 0) {
+    end += -start; // schuif window naar beneden
+    start = 0;
+  }
+  if (end > rows.length) {
+    const over = end - rows.length;
+    start = Math.max(0, start - over); // schuif window naar boven
+    end = rows.length;
+  }
+
+  // Pak window
+  let windowRows = rows.slice(start, end);
+
+  // Zorg dat window maximaal 7 is
+  if (windowRows.length > 7) {
+    // prefer: mijn team in het midden houden -> neem precies 7 rond myIdx binnen bounds
+    const fixedStart = Math.max(0, Math.min(myIdx - needAbove, rows.length - 7));
+    windowRows = rows.slice(fixedStart, fixedStart + 7);
+  }
+
+  return windowRows;
 }
 
 export default function HomePage() {
@@ -88,6 +137,7 @@ export default function HomePage() {
   // veilige defaults
   const fixtures = data?.fixtures ?? [];
   const lastResult = data?.lastResult ?? null;
+  const standings = data?.standings ?? [];
 
   // 2) Kies automatisch de eerstvolgende wedstrijd
   const nextMatch = useMemo(() => {
@@ -130,7 +180,7 @@ export default function HomePage() {
   const hasNextMatch = !!nextMatch;
   const hasLastResult = !!lastResult;
 
-  // Programma: toon 3 wedstrijden vanaf de eerstvolgende wedstrijd (incl. nextMatch)
+  // Programma: altijd 3 komende wedstrijden vanaf de eerstvolgende
   const programMatches = useMemo(() => {
     const now = Date.now();
 
@@ -139,12 +189,15 @@ export default function HomePage() {
       .filter((m) => Number.isFinite(m.ms) && m.ms > now)
       .sort((a, b) => a.ms - b.ms);
 
-    if (upcomingSorted.length === 0) return [];
-
-    // pak altijd vanaf de eerstvolgende (dus upcomingSorted[0]) en toon 3
     return upcomingSorted.slice(0, 3);
   }, [fixtures]);
 
+  // Stand: window van 7 met Daalhof in midden
+  const standWindow = useMemo(() => {
+    // belangrijk: sorteren op rank (voor zekerheid)
+    const sorted = [...standings].sort((a, b) => a.rank - b.rank);
+    return buildStandWindow(sorted, "Daalhof");
+  }, [standings]);
 
   return (
     <main className="phone">
@@ -262,7 +315,7 @@ export default function HomePage() {
             {programMatches.map((match) => {
               const dt = new Date(match.kickoff);
 
-              const weekday = dt.toLocaleDateString("nl-NL", { weekday: "short" }); // zo
+              const weekday = dt.toLocaleDateString("nl-NL", { weekday: "short" });
               const day = dt.getDate();
               const month = dt.getMonth() + 1;
               const dateLabel = `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} ${day}-${month}`;
@@ -272,11 +325,9 @@ export default function HomePage() {
                 minute: "2-digit",
               });
 
-              // (T) als Daalhof thuis speelt, anders (U)
               const isHome = match.homeTeam.name.toLowerCase().includes("daalhof");
               const homeAwayLabel = isHome ? "(T)" : "(U)";
 
-              // Toon logo van tegenstander
               const opponent = isHome ? match.awayTeam : match.homeTeam;
 
               return (
@@ -293,6 +344,51 @@ export default function HomePage() {
               );
             })}
           </div>
+        )}
+      </section>
+
+      {/* Stand */}
+      <section className="stand" aria-label="Stand">
+        <div className="standHeader">
+          <h2 className="standTitle">Stand</h2>
+          <div className="standCols" aria-label="Kolommen">
+            <span className="standCol">G</span>
+            <span className="standCol">P</span>
+          </div>
+        </div>
+
+        {isLoading && <p style={{ margin: 0, opacity: 0.7 }}>Laden…</p>}
+
+        {!isLoading && !isError && standWindow.length === 0 && (
+          <p style={{ margin: 0, opacity: 0.7 }}>Geen stand beschikbaar.</p>
+        )}
+
+        {!isLoading && !isError && standWindow.length > 0 && (
+          <>
+            <div className="standList" role="list" aria-label="Standings">
+              {standWindow.map((r) => {
+                const isMine = r.team.name.trim().toLowerCase() === "daalhof";
+                return (
+                  <div className={`standRow ${isMine ? "isMine" : ""}`} role="listitem" key={r.rank}>
+                    <div className="standRank">{r.rank}</div>
+
+                    <div className="standLogo" aria-label={`${r.team.name} logo`}>
+                      <img src={r.team.logo} alt={r.team.name} />
+                    </div>
+
+                    <div className="standName">{r.team.name}</div>
+
+                    <div className="standNum">{r.played}</div>
+                    <div className="standNum">{r.points}</div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <a className="standMore" href="/stand">
+              Volledige stand &gt;
+            </a>
+          </>
         )}
       </section>
     </main>

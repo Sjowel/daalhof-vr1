@@ -102,9 +102,9 @@ export async function GET() {
 
     // Nieuw: standings data voor de Stand-sectie
     standings: [
-      { rank: 1, team: { name: "Koploper", logo: "/away-logo.png" }, played: 9, points: 25 },
-      { rank: 2, team: { name: "Runner-up", logo: "/away-logo.png" }, played: 9, points: 22 },
-      { rank: 3, team: { name: "Derde", logo: "/away-logo.png" }, played: 9, points: 21 },
+      { rank: 1, team: { name: "Leonidas - W", logo: "/away-logo.png" }, played: 10, points: 22 },
+      { rank: 2, team: { name: "Sportclub'25", logo: "/away-logo.png" }, played: 9, points: 21 },
+      { rank: 3, team: { name: "RKHSV", logo: "/away-logo.png" }, played: 8, points: 20 },
 
       { rank: 4, team: { name: "GSV’28", logo: "/away-logo.png" }, played: 9, points: 20 },
       { rank: 5, team: { name: "S.V. Argo", logo: "/away-logo.png" }, played: 7, points: 17 },
@@ -113,8 +113,10 @@ export async function GET() {
       { rank: 8, team: { name: "Groene Ster", logo: "/away-logo.png" }, played: 9, points: 8 },
       { rank: 9, team: { name: "Schimmert", logo: "/away-logo.png" }, played: 8, points: 6 },
 
-      { rank: 10, team: { name: "Onderin", logo: "/away-logo.png" }, played: 9, points: 4 },
-      { rank: 11, team: { name: "Laatste", logo: "/away-logo.png" }, played: 9, points: 1 },
+      { rank: 10, team: { name: "BSV Limburgia/Kamerland", logo: "/away-logo.png" }, played: 8, points: 6 },
+      { rank: 11, team: { name: "SVO DVC'16", logo: "/away-logo.png" }, played: 9, points: 6 },
+      { rank: 12, team: { name: "Weltania", logo: "/away-logo.png" }, played: 7, points: 2 },
+      { rank: 13, team: { name: "RKHBS", logo: "/away-logo.png" }, played: 10, points: 2 },
     ],
   });
 }
