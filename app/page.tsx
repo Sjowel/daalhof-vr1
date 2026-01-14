@@ -391,6 +391,27 @@ export default function HomePage() {
           </>
         )}
       </section>
+            {/* Footer / Tabbar */}
+      <nav className="footer" aria-label="Hoofd navigatie">
+        <a className="footerItem" href="/wedstrijden" aria-label="Programma">
+          <span className="footerIcon" aria-hidden>📅</span>
+          <span className="footerLabel">Programma</span>
+        </a>
+
+        <a className="footerItem" href="/uitslagen" aria-label="Uitslagen">
+          <span className="footerIcon" aria-hidden>🧾</span>
+          <span className="footerLabel">Uitslagen</span>
+        </a>
+
+        <a className="footerItem" href="/stand" aria-label="Stand">
+          <span className="footerIcon" aria-hidden>⭐</span>
+          <span className="footerLabel">Stand</span>
+        </a>
+      </nav>
+
     </main>
+    
   );
 }
+
+
