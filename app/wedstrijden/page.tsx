@@ -76,8 +76,16 @@ export default function WedstrijdenPage() {
   return (
     <>
       <main className="phone">
+        
         <section className="programPage" aria-label="Programma">
-          <h1 className="programPageTitle">Programma</h1>
+<div className="pageHeader">
+  <h1 className="programPageTitle">Programma</h1>
+
+  <a href="/" className="backButton">
+     ← Terug naar overzicht
+  </a>
+</div>
+
 
           {status === "loading" && <p style={{ margin: 0, opacity: 0.7 }}>Laden…</p>}
           {status === "error" && (

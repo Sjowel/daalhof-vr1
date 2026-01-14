@@ -70,8 +70,16 @@ export default function UitslagenPage() {
   return (
     <>
       <main className="phone">
+        
         <section className="resultsPage" aria-label="Uitslagen">
-          <h1 className="resultsTitle">Uitslagen</h1>
+<div className="pageHeader">
+  <h1 className="programPageTitle">Stand</h1>
+
+  <a href="/" className="backButton">
+     ← Terug naar overzicht
+  </a>
+</div>
+
 
           {status === "loading" && <p style={{ margin: 0, opacity: 0.7 }}>Laden…</p>}
           {status === "error" && (

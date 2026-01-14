@@ -8,6 +8,7 @@ type Team = {
   logo: string;
 };
 
+
 type StandingRow = {
   rank: number;
   team: Team;
@@ -62,8 +63,16 @@ export default function StandPage() {
   return (
     <>
       <main className="phone">
+        
         <section className="standPage" aria-label="Stand">
-          <h1 className="standPageTitle">Stand</h1>
+<div className="pageHeader">
+  <h1 className="programPageTitle">Stand</h1>
+
+  <a href="/" className="backButton">
+     ← Terug naar overzicht
+  </a>
+</div>
+
 
           <div className="standMeta">
             <div className="standMetaLabel">Competitie</div>

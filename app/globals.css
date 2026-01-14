@@ -639,3 +639,175 @@ html, body{
   font-weight: 900;
   font-size: 16px;
 }
+
+/* ============================== */
+/* Stand pagina */
+/* ============================== */
+
+.standPage{
+  padding: 16px;
+  background: var(--bg);
+}
+
+.standPageTitle{
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #062a56;
+}
+
+.standMeta{
+  margin-bottom: 10px;
+}
+
+.standMetaLabel{
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(6,42,86,.85);
+}
+
+.standMetaValue{
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(6,42,86,.65);
+}
+
+.standHeaderRow{
+  display: grid;
+  grid-template-columns: 28px 36px 1fr 90px;
+  align-items: center;
+  padding: 6px 8px;
+  background: rgba(44,215,255,.35);
+  border-radius: 10px;
+  margin-bottom: 6px;
+}
+
+.standHeaderRight{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  justify-items: end;
+  gap: 12px;
+  padding-right: 4px;
+}
+
+.standHeaderCol{
+  font-size: 12px;
+  font-weight: 900;
+  color: rgba(6,42,86,.9);
+}
+
+.standTable{
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(6,42,86,.08);
+  background: rgba(255,255,255,.35);
+}
+
+.standTableRow{
+  display: grid;
+  grid-template-columns: 28px 36px 1fr 90px;
+  align-items: center;
+  padding: 10px 8px;
+  border-bottom: 1px solid rgba(6,42,86,.08);
+  color: rgba(6,42,86,.92);
+}
+
+.standTableRow:last-child{
+  border-bottom: 0;
+}
+
+.standRankCell{
+  font-weight: 800;
+  font-size: 12px;
+  opacity: .9;
+}
+
+.standLogoCell{
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255,255,255,.55);
+  display: grid;
+  place-items: center;
+}
+
+.standLogoCell img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.standNameCell{
+  font-size: 13px;
+  font-weight: 700;
+  padding-right: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.standNumsCell{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  justify-items: end;
+  gap: 12px;
+  padding-right: 4px;
+}
+
+.standNumCell{
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.standTableRow.isMine{
+  background: rgba(44,215,255,.25);
+}
+
+.standTableRow.isMine .standNameCell,
+.standTableRow.isMine .standNumCell,
+.standTableRow.isMine .standRankCell{
+  font-weight: 900;
+}
+
+.standFootnote{
+  margin-top: 8px;
+  font-size: 10px;
+  color: rgba(6,42,86,.55);
+}
+/* ============================== */
+/* Page header (title + back) */
+/* ============================== */
+
+.pageHeader{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin: 12px 16px 10px;
+}
+
+/* Titel blijft links */
+.pageHeader h1{
+  margin: 0;
+}
+
+/* Back knop rechts */
+.backButton{
+  display: inline-flex;
+  align-items: center;
+
+  padding: 6px 10px;
+  border-radius: 10px;
+
+  background: rgba(255,255,255,.6);
+
+  color: #062a56;
+  font-weight: 700;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.backButton:hover{
+  background: rgba(255,255,255,.8);
+}
