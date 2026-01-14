@@ -2,15 +2,21 @@ import { NextResponse } from "next/server";
 
 type Team = { name: string; logo: string };
 
+type Match = {
+  id: string;
+  kickoff: string; // ISO
+  homeTeam: Team;
+  awayTeam: Team;
+  // Alleen aanwezig als gespeeld:
+  score?: { home: number; away: number };
+};
+
 type Result = {
   id: string;
   date: string; // YYYY-MM-DD
   homeTeam: Team;
   awayTeam: Team;
   score: { home: number; away: number };
-
-  // Alleen results met countForStand: true tellen mee voor automatische stand update
-  countForStand?: boolean;
 };
 
 type StandingRow = {
@@ -19,6 +25,10 @@ type StandingRow = {
   played: number; // G
   points: number; // P
 };
+
+function isoToDate(iso: string) {
+  return iso.slice(0, 10);
+}
 
 function normalizeName(name: string) {
   return name
@@ -34,53 +44,117 @@ function isMyTeam(teamName: string) {
 }
 
 /**
- * Past ALLEEN Daalhof aan op basis van results die countForStand: true hebben.
- * Alle andere teams blijven exact zoals jij in standings hebt gezet.
+ * Rekent Daalhof ALTIJD opnieuw uit op basis van results waar Daalhof in voorkomt.
+ * Alle andere teams blijven exact zoals jij invult in standings.
  */
-function applyCountedResultsToMyTeam(standings: StandingRow[], results: Result[]) {
-  const counted = results.filter((r) => r.countForStand);
-
-  if (counted.length === 0) return standings;
-
+function recomputeMyTeamRow(standings: StandingRow[], results: Result[]) {
   const idx = standings.findIndex((r) => isMyTeam(r.team.name));
   if (idx === -1) return standings;
 
-  const updated = standings.map((r) => ({ ...r, team: { ...r.team } }));
-  const myRow = updated[idx];
+  let played = 0;
+  let points = 0;
 
-  for (const r of counted) {
+  for (const r of results) {
     const isHomeMine = isMyTeam(r.homeTeam.name);
     const isAwayMine = isMyTeam(r.awayTeam.name);
-
-    // als Daalhof niet meedoet: skip
     if (!isHomeMine && !isAwayMine) continue;
 
-    // altijd +1 gespeeld
-    myRow.played += 1;
+    played += 1;
 
-    // punten op basis van winst/gelijk/verlies
     const myGoals = isHomeMine ? r.score.home : r.score.away;
     const oppGoals = isHomeMine ? r.score.away : r.score.home;
 
-    if (myGoals > oppGoals) myRow.points += 3;
-    else if (myGoals === oppGoals) myRow.points += 1;
+    if (myGoals > oppGoals) points += 3;
+    else if (myGoals === oppGoals) points += 1;
     // verlies: +0
   }
+
+  const updated = standings.map((r) => ({ ...r, team: { ...r.team } }));
+  updated[idx] = { ...updated[idx], played, points };
 
   return updated;
 }
 
 export async function GET() {
   // =========================
-  // Fixtures (programma)
-  // ids uniek gemaakt
+  // 1) ÉÉN bron: matches
+  //    - toekomstige wedstrijden: geen score
+  //    - gespeelde wedstrijden: score invullen
   // =========================
-  const fixtures = [
+  const matches: Match[] = [
+    // Gespeelde wedstrijden (zet score erin)
+    {
+      id: "m1",
+      kickoff: "2025-09-28T10:00:00+02:00",
+      homeTeam: { name: "Daalhof VR1", logo: "/home-logo.png" },
+      awayTeam: { name: "RKHSV", logo: "/away-logo.png" },
+      score: { home: 1, away: 1 },
+    },
+    {
+      id: "m2",
+      kickoff: "2025-10-05T10:00:00+02:00",
+      homeTeam: { name: "GSV'28", logo: "/away-logo.png" },
+      awayTeam: { name: "Daalhof VR1", logo: "/home-logo.png" },
+      score: { home: 1, away: 2 },
+    },
+    {
+      id: "m3",
+      kickoff: "2025-10-12T10:00:00+02:00",
+      homeTeam: { name: "Daalhof VR1", logo: "/home-logo.png" },
+      awayTeam: { name: "RKHSB", logo: "/away-logo.png" },
+      score: { home: 2, away: 0 },
+    },
+    {
+      id: "m4",
+      kickoff: "2025-10-26T10:00:00+01:00",
+      homeTeam: { name: "Schimmert", logo: "/away-logo.png" },
+      awayTeam: { name: "Daalhof VR1", logo: "/home-logo.png" },
+      score: { home: 0, away: 1 },
+    },
+    {
+      id: "m5",
+      kickoff: "2025-11-23T10:00:00+01:00",
+      homeTeam: { name: "SVO DVC'16", logo: "/away-logo.png" },
+      awayTeam: { name: "Daalhof VR 1", logo: "/home-logo.png" },
+      score: { home: 1, away: 3 },
+    },
+    {
+      id: "m6",
+      kickoff: "2025-11-30T10:00:00+01:00",
+      homeTeam: { name: "Daalhof VR1", logo: "/home-logo.png" },
+      awayTeam: { name: "Sportclub'25", logo: "/away-logo.png" },
+      score: { home: 0, away: 3 },
+    },
+    {
+      id: "m7",
+      kickoff: "2025-12-07T10:00:00+01:00",
+      homeTeam: { name: "RKVV", logo: "/away-logo.png" },
+      awayTeam: { name: "Daalhof VR1", logo: "/home-logo.png" },
+      score: { home: 2, away: 0 },
+    },
+    {
+      id: "m8",
+      kickoff: "2025-12-14T10:00:00+01:00",
+      homeTeam: { name: "VV Iets", logo: "/away-logo.png" },
+      awayTeam: { name: "Daalhof VR1", logo: "/home-logo.png" },
+      score: { home: 3, away: 4 },
+    },
+    {
+      id: "m9",
+      kickoff: "2025-12-21T10:00:00+01:00",
+      homeTeam: { name: "Daalhof VR1", logo: "/home-logo.png" },
+      awayTeam: { name: "Leonidas - W", logo: "/away-logo.png" },
+      score: { home: 0, away: 1 },
+    },
+
+    // Toekomstige wedstrijden (laat score weg)
     {
       id: "w1",
       kickoff: "2026-01-18T10:00:00+01:00",
       homeTeam: { name: "Daalhof VR1", logo: "/home-logo.png" },
       awayTeam: { name: "Groene Ster VR1", logo: "/away-logo.png" },
+
+
     },
     {
       id: "w2",
@@ -169,77 +243,40 @@ export async function GET() {
   ];
 
   // =========================
-  // Results (uitslagen) – jouw input
-  // Zet countForStand: true alleen bij de NIEUWE uitslag die je wilt laten meetellen.
+  // 2) Split automatisch naar fixtures/results
   // =========================
-  const results: Result[] = [
-    {
-      id: "r9",
-      date: "2025-12-21",
-      homeTeam: { name: "Daalhof VR1", logo: "/home-logo.png" },
-      awayTeam: { name: "Leonidas - W", logo: "/away-logo.png" },
-      score: { home: 0, away: 1 },
-    },
-    {
-      id: "r8",
-      date: "2025-12-14",
-      homeTeam: { name: "VV Iets", logo: "/away-logo.png" },
-      awayTeam: { name: "Daalhof VR1", logo: "/home-logo.png" },
-      score: { home: 3, away: 4 },
-    },
-    {
-      id: "r7",
-      date: "2025-12-07",
-      homeTeam: { name: "RKVV", logo: "/away-logo.png" },
-      awayTeam: { name: "Daalhof VR1", logo: "/home-logo.png" },
-      score: { home: 2, away: 0 },
-    },
-    {
-      id: "r6",
-      date: "2025-11-30",
-      homeTeam: { name: "Daalhof VR1", logo: "/home-logo.png" },
-      awayTeam: { name: "Sportclub'25", logo: "/away-logo.png" },
-      score: { home: 0, away: 3 },
-    },
-    {
-      id: "r5",
-      date: "2025-11-23",
-      homeTeam: { name: "SVO DVC'16", logo: "/away-logo.png" },
-      awayTeam: { name: "Daalhof VR 1", logo: "/home-logo.png" },
-      score: { home: 1, away: 3 },
-    },
-    {
-      id: "r4",
-      date: "2025-10-26",
-      homeTeam: { name: "Schimmert", logo: "/away-logo.png" },
-      awayTeam: { name: "Daalhof VR1", logo: "/home-logo.png" },
-      score: { home: 1, away: 1 },
-    },
-    {
-      id: "r3",
-      date: "2025-10-12",
-      homeTeam: { name: "Daalhof VR1", logo: "/home-logo.png" },
-      awayTeam: { name: "RKHSB", logo: "/away-logo.png" },
-      score: { home: 2, away: 0 },
-    },
-    {
-      id: "r2",
-      date: "2025-10-05",
-      homeTeam: { name: "GSV'28", logo: "/away-logo.png" },
-      awayTeam: { name: "Daalhof VR1", logo: "/home-logo.png" },
-      score: { home: 2, away: 0 },
-    },
-    {
-      id: "r1",
-      date: "2025-09-28",
-      homeTeam: { name: "Daalhof VR1", logo: "/away-logo.png" },
-      awayTeam: { name: "RKHSV", logo: "/home-logo.png" },
-      score: { home: 1, away: 1 },
-    },
-  ];
+  const fixtures = matches
+    .filter((m) => !m.score)
+    .map(({ id, kickoff, homeTeam, awayTeam }) => ({
+      id,
+      kickoff,
+      homeTeam,
+      awayTeam,
+    }));
+
+  const results: Result[] = matches
+    .filter((m) => !!m.score)
+    .map((m) => ({
+      id: m.id,
+      date: isoToDate(m.kickoff),
+      homeTeam: m.homeTeam,
+      awayTeam: m.awayTeam,
+      score: m.score!,
+    }));
 
   // =========================
-  // Standings – blijft zoals jij het invult
+  // 3) lastResult = nieuwste result op basis van date
+  // =========================
+  const resultsSorted = [...results].sort((a, b) => (a.date < b.date ? 1 : -1));
+  const newest = resultsSorted[0] ?? null;
+
+  const lastResult = newest
+    ? { homeTeam: newest.homeTeam, awayTeam: newest.awayTeam, score: newest.score }
+    : null;
+
+  // =========================
+  // 4) standings HANDMATIG invullen (andere teams)
+  //    maar Daalhof wordt automatisch herberekend uit results
   // =========================
   const standings: StandingRow[] = [
     { rank: 1, team: { name: "Leonidas - W", logo: "/away-logo.png" }, played: 10, points: 22 },
@@ -247,6 +284,7 @@ export async function GET() {
     { rank: 3, team: { name: "RKHSV", logo: "/away-logo.png" }, played: 8, points: 20 },
     { rank: 4, team: { name: "GSV’28", logo: "/away-logo.png" }, played: 9, points: 20 },
     { rank: 5, team: { name: "S.V. Argo", logo: "/away-logo.png" }, played: 7, points: 17 },
+    // Daalhof: played/points worden overschreven
     { rank: 6, team: { name: "Daalhof", logo: "/home-logo.png" }, played: 9, points: 16 },
     { rank: 7, team: { name: "ST UOW’02", logo: "/away-logo.png" }, played: 9, points: 8 },
     { rank: 8, team: { name: "Groene Ster", logo: "/away-logo.png" }, played: 9, points: 8 },
@@ -257,24 +295,7 @@ export async function GET() {
     { rank: 13, team: { name: "RKHBS", logo: "/away-logo.png" }, played: 10, points: 2 },
   ];
 
-  // =========================
-  // lastResult = nieuwste uitslag uit results op basis van date
-  // =========================
-  const resultsSorted = [...results].sort((a, b) => (a.date < b.date ? 1 : -1));
-  const newest = resultsSorted[0] ?? null;
-
-  const lastResult = newest
-    ? {
-        homeTeam: newest.homeTeam,
-        awayTeam: newest.awayTeam,
-        score: newest.score,
-      }
-    : null;
-
-  // =========================
-  // standings updaten: alleen Daalhof telt results met countForStand: true
-  // =========================
-  const updatedStandings = applyCountedResultsToMyTeam(standings, results);
+  const updatedStandings = recomputeMyTeamRow(standings, results);
 
   return NextResponse.json({
     fixtures,
