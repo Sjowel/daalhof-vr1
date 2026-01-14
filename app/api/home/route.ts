@@ -75,6 +75,28 @@ function recomputeMyTeamRow(standings: StandingRow[], results: Result[]) {
   return updated;
 }
 
+/**
+ * Sorteert de volledige stand opnieuw en kent rank opnieuw toe.
+ * Hierdoor schuift Daalhof omhoog/omlaag als de punten veranderen.
+ *
+ * Tiebreakers (simpel):
+ * 1) points (desc)
+ * 2) played (asc)  -> minder wedstrijden gespeeld is beter bij gelijke punten
+ * 3) teamnaam (asc)
+ */
+function reorderAndRankStandings(rows: StandingRow[]) {
+  const sorted = [...rows].sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    if (a.played !== b.played) return a.played - b.played;
+
+    const na = a.team.name.toLowerCase();
+    const nb = b.team.name.toLowerCase();
+    return na < nb ? -1 : na > nb ? 1 : 0;
+  });
+
+  return sorted.map((r, i) => ({ ...r, rank: i + 1 }));
+}
+
 export async function GET() {
   // =========================
   // 1) ÉÉN bron: matches
@@ -128,14 +150,14 @@ export async function GET() {
     {
       id: "m7",
       kickoff: "2025-12-07T10:00:00+01:00",
-      homeTeam: { name: "RKVV", logo: "/away-logo.png" },
+      homeTeam: { name: "Leonidas - W", logo: "/away-logo.png" },
       awayTeam: { name: "Daalhof VR1", logo: "/home-logo.png" },
       score: { home: 2, away: 0 },
     },
     {
       id: "m8",
       kickoff: "2025-12-14T10:00:00+01:00",
-      homeTeam: { name: "VV Iets", logo: "/away-logo.png" },
+      homeTeam: { name: "BSV Limburgia", logo: "/away-logo.png" },
       awayTeam: { name: "Daalhof VR1", logo: "/home-logo.png" },
       score: { home: 3, away: 4 },
     },
@@ -143,7 +165,7 @@ export async function GET() {
       id: "m9",
       kickoff: "2025-12-21T10:00:00+01:00",
       homeTeam: { name: "Daalhof VR1", logo: "/home-logo.png" },
-      awayTeam: { name: "Leonidas - W", logo: "/away-logo.png" },
+      awayTeam: { name: "SV Argo", logo: "/away-logo.png" },
       score: { home: 0, away: 1 },
     },
 
@@ -153,8 +175,7 @@ export async function GET() {
       kickoff: "2026-01-18T10:00:00+01:00",
       homeTeam: { name: "Daalhof VR1", logo: "/home-logo.png" },
       awayTeam: { name: "Groene Ster VR1", logo: "/away-logo.png" },
-
-
+      
     },
     {
       id: "w2",
@@ -295,12 +316,16 @@ export async function GET() {
     { rank: 13, team: { name: "RKHBS", logo: "/away-logo.png" }, played: 10, points: 2 },
   ];
 
+  // 5) Update alleen Daalhof op basis van results
   const updatedStandings = recomputeMyTeamRow(standings, results);
+
+  // 6) Sorteer opnieuw en ken ranks opnieuw toe (zodat Daalhof kan stijgen/dalen)
+  const rankedStandings = reorderAndRankStandings(updatedStandings);
 
   return NextResponse.json({
     fixtures,
     results,
     lastResult,
-    standings: updatedStandings,
+    standings: rankedStandings,
   });
 }
