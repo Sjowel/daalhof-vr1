@@ -28,14 +28,24 @@ type HomeApiResponse = {
     awayTeam: Team;
     score: { home: number; away: number };
   };
-  standings: StandingRow[]; // <-- nieuw
+  standings: StandingRow[];
+  results: Result[];
 };
+
 
 type Countdown = {
   days: number;
   hours: number;
   minutes: number;
   isExpired: boolean;
+};
+
+type Result = {
+  id: string;
+  date: string; // "YYYY-MM-DD"
+  homeTeam: Team;
+  awayTeam: Team;
+  score: { home: number; away: number };
 };
 
 function getCountdown(targetMs: number): Countdown {
