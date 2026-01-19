@@ -44,7 +44,7 @@ The goal of this project is to practice front-end development using **Next.js** 
 ### Steps
 1. Clone the repository:
    ```bash
-   git clone <your-repository-url>
+   git clone [https://github.com/Sjowel/daalhof-vr1 ]
 2. Navigate to the project folder:
 
 cd daalhof-vr1
